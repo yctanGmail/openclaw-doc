@@ -1,0 +1,11 @@
+# 股票价格预警 Cron 配置
+# 交易时间每 15 分钟检查一次（工作日）
+
+# 上午 9:30-11:15（每 15 分钟）
+30,45 9 * * 1-5 /home/yctan/.openclaw/workspace-lead/scripts/stock_alert_cron.sh
+0,15,30,45 10 * * 1-5 /home/yctan/.openclaw/workspace-lead/scripts/stock_alert_cron.sh
+0,15 11 * * 1-5 /home/yctan/.openclaw/workspace-lead/scripts/stock_alert_cron.sh
+
+# 下午 13:00-14:45（每 15 分钟）
+0,15,30,45 13 * * 1-5 /home/yctan/.openclaw/workspace-lead/scripts/stock_alert_cron.sh
+0,15,30,45 14 * * 1-5 /home/yctan/.openclaw/workspace-lead/scripts/stock_alert_cron.sh

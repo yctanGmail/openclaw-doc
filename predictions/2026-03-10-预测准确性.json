@@ -1,0 +1,93 @@
+{
+  "date": "2026-03-10",
+  "prediction": {},
+  "actual": {
+    "shanghai_close": "4123.14",
+    "shanghai_change": "+0.65",
+    "shanghai_status": "🟢",
+    "shenzhen_close": "14354.07",
+    "shenzhen_change": "+2.04",
+    "shenzhen_status": "🟢",
+    "chiext_close": "3306.14",
+    "chiext_change": "+3.04",
+    "chiext_status": "🟢",
+    "change_pct": 0.65,
+    "market_performance": "震荡上涨",
+    "data_timestamp": "2026-03-10 15:30:15",
+    "stocks_table": "```\n股票    | 现价    | 开盘   | 最高   | 最低   | 涨跌%   | PE(TTM) | PB\n--------|---------|--------|--------|--------|---------|---------|-----\n贵州茅台    | 1401.88 | 1404.90 | 1409.49 | 1398.00 |   +0.35 | 19.5    | 7.73\n五粮液     |  102.05 | 101.88 | 102.39 | 101.76 |   +0.52 | 13.93   | 2.99\n中国平安    |   62.09 |  61.86 |  62.38 |  61.72 |   +1.12 | 8.01    | 1.14\n```",
+    "stocks_data": [
+      {
+        "price": 1401.88,
+        "open": 1404.9,
+        "high": 1409.49,
+        "low": 1398.0,
+        "volume": 24626.0,
+        "amount": 345781.0,
+        "change_pct": 0.35,
+        "pe_ttm": 19.5,
+        "pb": 7.73,
+        "timestamp": "2026-03-10 15:30:16",
+        "source": "腾讯财经 API",
+        "name": "贵州茅台",
+        "code": "sh600519"
+      },
+      {
+        "price": 102.05,
+        "open": 101.88,
+        "high": 102.39,
+        "low": 101.76,
+        "volume": 111694.0,
+        "amount": 113937.0,
+        "change_pct": 0.52,
+        "pe_ttm": 13.93,
+        "pb": 2.99,
+        "timestamp": "2026-03-10 15:30:16",
+        "source": "腾讯财经 API",
+        "name": "五粮液",
+        "code": "sz000858"
+      },
+      {
+        "price": 62.09,
+        "open": 61.86,
+        "high": 62.38,
+        "low": 61.72,
+        "volume": 462184.0,
+        "amount": 286699.0,
+        "change_pct": 1.12,
+        "pe_ttm": 8.01,
+        "pb": 1.14,
+        "timestamp": "2026-03-10 15:30:16",
+        "source": "腾讯财经 API",
+        "name": "中国平安",
+        "code": "sh601318"
+      }
+    ]
+  },
+  "accuracy": {
+    "sentiment_correct": false,
+    "position_advice": "⚠️ 需调整",
+    "key_factors": []
+  },
+  "indicators": {
+    "macro": {
+      "score": 52,
+      "impact": "中性"
+    },
+    "liquidity": {
+      "score": 55,
+      "impact": "中性"
+    },
+    "sentiment": {
+      "score": 59.55,
+      "impact": "正面"
+    },
+    "technical": {
+      "score": 69.1,
+      "impact": "正面"
+    },
+    "external": {
+      "score": 48,
+      "impact": "负面"
+    }
+  }
+}

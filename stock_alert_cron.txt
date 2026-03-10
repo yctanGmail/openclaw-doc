@@ -1,0 +1,10 @@
+# 股票价格预警 - 交易时段每 15 分钟检查
+# 上午 9:30-11:30
+30,45 9 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 stock_alert.py >> stock_alert.log 2>&1
+*/15 10 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 stock_alert.py >> stock_alert.log 2>&1
+0,15 11 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 stock_alert.py >> stock_alert.log 2>&1
+
+# 下午 13:00-15:00
+*/15 13 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 stock_alert.py >> stock_alert.log 2>&1
+*/15 14 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 stock_alert.py >> stock_alert.log 2>&1
+0 15 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 stock_alert.py >> stock_alert.log 2>&1

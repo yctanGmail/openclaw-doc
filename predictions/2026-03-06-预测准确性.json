@@ -1,0 +1,45 @@
+{
+  "date": "2026-03-06",
+  "prediction": {},
+  "actual": {
+    "shanghai_close": "4,124.19",
+    "shanghai_change": "+0.38",
+    "shanghai_status": "🟢",
+    "shenzhen_close": "14,172.63",
+    "shenzhen_change": "+0.59",
+    "shenzhen_status": "🟢",
+    "chiext_close": "3,229.30",
+    "chiext_change": "+0.38",
+    "chiext_status": "🟢",
+    "change_pct": 0.38,
+    "market_performance": "震荡上涨",
+    "stocks_table": "| 股票 | 现价 | 涨跌 | 状态 |\n|------|------|------|------|\n| 贵州茅台 | 1402.00 | +0.21% | 🟢 |\n| 五粮液 | 102.40 | +0.94% | 🟢 |\n| 招商银行 | 39.20 | +0.13% | 🟢 |\n| 宁德时代 | 354.77 | +1.29% | 🟢 |\n| 美的集团 | 76.52 | +0.33% | 🟢 |\n| 中信证券 | 26.43 | +0.84% | 🟢 |\n| 中航沈飞 | 55.56 | -0.70% | 🔴 |"
+  },
+  "accuracy": {
+    "sentiment_correct": false,
+    "position_advice": "⚠️ 需调整",
+    "key_factors": []
+  },
+  "indicators": {
+    "macro": {
+      "score": 52,
+      "impact": "中性"
+    },
+    "liquidity": {
+      "score": 55,
+      "impact": "中性"
+    },
+    "sentiment": {
+      "score": 50,
+      "impact": "中性"
+    },
+    "technical": {
+      "score": 58,
+      "impact": "正面"
+    },
+    "external": {
+      "score": 48,
+      "impact": "负面"
+    }
+  }
+}

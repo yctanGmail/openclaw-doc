@@ -1,0 +1,7 @@
+# 股票价格预警 - 交易时间每 15 分钟检查一次
+# 上午 9:30-11:30
+30 9 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && bash stock_alert_cron.sh
+*/15 10-11 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && bash stock_alert_cron.sh
+# 下午 13:00-15:00
+*/15 13-14 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && bash stock_alert_cron.sh
+0 15 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && bash stock_alert_cron.sh

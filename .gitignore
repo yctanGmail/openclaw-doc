@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Logs
+*.log
+
+# State files
+alert_state.json
+stock_alert_state.json
+workspace-state.json
+
+# Temporary
+*.tmp
+*.swp

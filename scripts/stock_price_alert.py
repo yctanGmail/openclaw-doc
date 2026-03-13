@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-持仓股票价格预警监控脚本
-监控招商银行和紫金矿业，触发预警时通过飞书推送
+股票价格预警监控脚本
+监控持仓股票价格，触发预警条件时推送飞书消息
 """
 
 import akshare as ak
@@ -11,246 +11,211 @@ import os
 from datetime import datetime
 from pathlib import Path
 
-# 持仓配置
+# 配置
 HOLDINGS = [
-    {
-        "name": "招商银行",
-        "code": "600036",
-        "cost": 38.90,
-        "exchange": "SH"
-    },
-    {
-        "name": "紫金矿业",
-        "code": "601899",
-        "cost": 35.12,
-        "exchange": "SH"
-    }
+    {"code": "600036", "name": "招商银行", "cost": 38.90},
+    {"code": "601899", "name": "紫金矿业", "cost": 35.12},
 ]
 
 # 预警阈值
 ALERT_THRESHOLDS = [
-    {"pct": 5, "type": "gain", "message": "考虑止盈"},
-    {"pct": 7, "type": "gain", "message": "建议减仓"},
-    {"pct": -5, "type": "drop", "message": "检查基本面"},
-    {"pct": -8, "type": "drop", "message": "考虑止损"},
+    {"pct": 5, "type": "up", "message": "考虑止盈"},
+    {"pct": 7, "type": "up", "message": "建议减仓"},
+    {"pct": -5, "type": "down", "message": "检查基本面"},
+    {"pct": -8, "type": "down", "message": "考虑止损"},
 ]
 
-# 状态文件路径（用于避免重复推送）
-STATE_FILE = Path(__file__).parent.parent / "memory" / "stock_alert_state.json"
+# 状态文件路径（用于记录已触发的预警，避免重复推送）
+STATE_FILE = Path(__file__).parent.parent / "data" / "stock_alert_state.json"
 
-def load_state():
-    """加载上次预警状态"""
+
+def get_stock_price(code: str) -> dict:
+    """获取股票实时价格"""
+    try:
+        # 使用 akshare 获取实时行情
+        stock_info = ak.stock_zh_a_spot_em()
+        stock = stock_info[stock_info['代码'] == code]
+        
+        if stock.empty:
+            return None
+        
+        row = stock.iloc[0]
+        return {
+            "code": code,
+            "name": row.get('名称', ''),
+            "price": float(row.get('最新价', 0)),
+            "change_pct": float(row.get('涨跌幅', 0)),
+            "change": float(row.get('涨跌额', 0)),
+        }
+    except Exception as e:
+        print(f"获取 {code} 价格失败：{e}")
+        return None
+
+
+def check_alert(stock: dict, cost: float) -> list:
+    """检查是否触发预警 - 返回最严重的预警级别"""
+    current_price = stock["price"]
+    # 计算相对于成本价的涨跌幅
+    cost_change_pct = ((current_price - cost) / cost) * 100
+    
+    alerts = []
+    for threshold in ALERT_THRESHOLDS:
+        if threshold["type"] == "up" and cost_change_pct >= threshold["pct"]:
+            alerts.append({
+                "level": threshold["pct"],
+                "direction": "up",
+                "message": threshold["message"],
+                "cost_change_pct": cost_change_pct,
+            })
+        elif threshold["type"] == "down" and cost_change_pct <= threshold["pct"]:
+            alerts.append({
+                "level": threshold["pct"],
+                "direction": "down",
+                "message": threshold["message"],
+                "cost_change_pct": cost_change_pct,
+            })
+    
+    # 返回最严重的预警（上涨取最高阈值，下跌取最低阈值）
+    if alerts:
+        if alerts[0]["direction"] == "up":
+            # 上涨：返回阈值最高的（最严重）
+            return [max(alerts, key=lambda x: x["level"])]
+        else:
+            # 下跌：返回阈值最低的（最严重，如 -8% 比 -5% 更严重）
+            return [min(alerts, key=lambda x: x["level"])]
+    return []
+
+
+def load_state() -> dict:
+    """加载状态文件"""
     if STATE_FILE.exists():
-        with open(STATE_FILE, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        try:
+            with open(STATE_FILE, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except:
+            pass
     return {}
 
-def save_state(state):
-    """保存预警状态"""
+
+def save_state(state: dict):
+    """保存状态文件"""
     STATE_FILE.parent.mkdir(parents=True, exist_ok=True)
     with open(STATE_FILE, 'w', encoding='utf-8') as f:
         json.dump(state, f, ensure_ascii=False, indent=2)
 
-def get_stock_price(code):
-    """获取股票实时行情"""
-    try:
-        # 使用 akshare 获取实时行情
-        if code.startswith('6'):
-            # 沪市
-            stock_code = f"sh{code}"
-        else:
-            # 深市
-            stock_code = f"sz{code}"
-        
-        # 获取实时行情
-        df = ak.stock_zh_a_spot_em()
-        stock_data = df[df['代码'] == code]
-        
-        if stock_data.empty:
-            print(f"未找到股票 {code} 的数据")
-            return None
-        
-        row = stock_data.iloc[0]
-        current_price = float(row['最新价'])
-        prev_close = float(row['昨收'])
-        change_pct = float(row['涨跌幅'])
-        
-        return {
-            "price": current_price,
-            "prev_close": prev_close,
-            "change_pct": change_pct
-        }
-    except Exception as e:
-        print(f"获取行情失败：{e}")
-        return None
 
-def check_alerts(stock, price_data, last_alert_state):
-    """检查是否触发预警"""
-    alerts = []
-    change_pct = price_data["change_pct"]
-    current_price = price_data["price"]
+def should_alert(stock_code: str, alert_level: int, direction: str, state: dict) -> bool:
+    """判断是否应该推送（避免重复推送同一级别的预警）"""
+    key = f"{stock_code}_{direction}_{alert_level}"
     
-    # 检查每个阈值
-    for threshold in ALERT_THRESHOLDS:
-        pct = threshold["pct"]
-        alert_key = f"{stock['code']}_{pct}"
-        
-        # 判断是否触发
-        triggered = False
-        if threshold["type"] == "gain" and change_pct >= pct:
-            triggered = True
-        elif threshold["type"] == "drop" and change_pct <= pct:
-            triggered = True
-        
-        # 如果触发且上次未推送此级别预警
-        if triggered:
-            # 检查是否已经推送过相同或更高级别的预警
-            last_alert = last_alert_state.get(stock['code'], {})
-            last_pct = last_alert.get('last_pct', -100)
-            
-            # 只在达到新的预警级别时推送
-            if threshold["type"] == "gain" and pct > last_pct:
-                alerts.append({
-                    "stock": stock,
-                    "price": current_price,
-                    "change_pct": change_pct,
-                    "message": threshold["message"],
-                    "level": pct
-                })
-            elif threshold["type"] == "drop" and pct < last_pct:
-                alerts.append({
-                    "stock": stock,
-                    "price": current_price,
-                    "change_pct": change_pct,
-                    "message": threshold["message"],
-                    "level": pct
-                })
-            elif last_pct == -100:  # 首次预警
-                alerts.append({
-                    "stock": stock,
-                    "price": current_price,
-                    "change_pct": change_pct,
-                    "message": threshold["message"],
-                    "level": pct
-                })
+    # 如果这个级别的预警已经推送过，且当前没有更严重的预警，则不推送
+    last_alert = state.get(key)
+    if last_alert:
+        # 检查是否是新的交易日
+        last_date = last_alert.get("date", "")
+        today = datetime.now().strftime("%Y-%m-%d")
+        if last_date == today:
+            return False
     
-    return alerts
+    return True
 
-def format_alert_message(alert):
+
+def format_alert_message(stock: dict, cost: float, alert: dict) -> str:
     """格式化预警消息"""
-    stock = alert["stock"]
-    price = alert["price"]
-    change_pct = alert["change_pct"]
-    suggestion = alert["message"]
+    cost_change_pct = alert["cost_change_pct"]
+    direction_symbol = "+" if cost_change_pct >= 0 else ""
     
-    # 格式化涨跌幅显示
-    if change_pct >= 0:
-        change_str = f"+{change_pct:.2f}%"
-    else:
-        change_str = f"{change_pct:.2f}%"
-    
-    message = f"""🔔【价格预警】
+    return f"""🔔【价格预警】
 股票：{stock['name']} ({stock['code']})
-现价：{price:.2f} 元
-涨跌：{change_str}
-成本：{stock['cost']:.2f} 元
-建议：{suggestion}"""
-    
-    return message
+现价：{stock['price']:.2f} 元
+成本：{cost:.2f} 元
+涨跌：{direction_symbol}{cost_change_pct:.1f}% (相对成本)
+建议：{alert['message']}"""
 
-def send_feishu_alert(message):
-    """通过飞书发送预警"""
-    # 使用 OpenClaw 的 message 工具需要特殊处理
-    # 这里输出到 stdout，由调用方处理
-    print(f"FEISHU_ALERT:{message}")
 
-def is_trading_time():
-    """检查是否在交易时间内"""
-    now = datetime.now()
-    hour = now.hour
-    minute = now.minute
-    
-    # 检查是否是工作日
-    if now.weekday() >= 5:  # 周六周日
-        return False
-    
-    # 上午 9:30-11:30
-    if hour == 9 and minute >= 30:
-        return True
-    if hour == 10:
-        return True
-    if hour == 11 and minute <= 30:
-        return True
-    
-    # 下午 13:00-15:00
-    if hour == 13:
-        return True
-    if hour == 14:
-        return True
-    if hour == 15 and minute == 0:
-        return True
-    
-    return False
+def send_feishu_alert(message: str):
+    """发送飞书消息（通过 OpenClaw message 工具）"""
+    # 这个函数会被 OpenClaw 调用，实际发送通过 message 工具
+    # 这里只打印消息，由调用方处理发送
+    print("FEISHU_ALERT:" + message)
+
 
 def main():
     """主函数"""
-    print(f"=== 股票价格预警检查 ===")
-    print(f"时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    now = datetime.now()
+    today = now.strftime("%Y-%m-%d")
+    current_time = now.strftime("%H:%M")
     
     # 检查是否在交易时间
-    if not is_trading_time():
-        print("非交易时间，跳过检查")
+    if not ((9, 30) <= (now.hour, now.minute) <= (11, 30) or 
+            (13, 0) <= (now.hour, now.minute) <= (15, 0)):
+        print(f"非交易时间 ({current_time})，跳过检查")
         return
     
-    # 加载上次状态
+    # 检查是否是交易日（简单判断：工作日）
+    weekday = now.weekday()
+    if weekday >= 5:  # 周六=5, 周日=6
+        print(f"周末，跳过检查")
+        return
+    
     state = load_state()
-    last_date = state.get('last_date', '')
-    today = datetime.now().strftime('%Y-%m-%d')
-    
-    # 如果是新的一天，重置状态
-    if last_date != today:
-        state = {'last_date': today, 'alerts': {}}
-        print("新交易日，重置预警状态")
-    
     alerts_triggered = []
     
-    # 检查每只股票
-    for stock in HOLDINGS:
-        print(f"\n检查 {stock['name']} ({stock['code']})...")
+    for holding in HOLDINGS:
+        code = holding["code"]
+        name = holding["name"]
+        cost = holding["cost"]
         
-        price_data = get_stock_price(stock['code'])
-        if not price_data:
+        print(f"检查 {name} ({code})...")
+        
+        stock = get_stock_price(code)
+        if not stock:
+            print(f"  获取价格失败")
             continue
         
-        print(f"  现价：{price_data['price']:.2f} 元")
-        print(f"  涨跌：{price_data['change_pct']:.2f}%")
+        print(f"  现价：{stock['price']:.2f} 元，涨跌幅：{stock['change_pct']:.2f}%")
         
-        # 检查预警
-        stock_last_state = state.get('alerts', {}).get(stock['code'], {})
-        alerts = check_alerts(stock, price_data, stock_last_state)
-        
+        alerts = check_alert(stock, cost)
         if alerts:
-            for alert in alerts:
-                alerts_triggered.append(alert)
-                msg = format_alert_message(alert)
-                print(f"\n⚠️ 触发预警:")
-                print(msg)
-                send_feishu_alert(msg)
+            alert = alerts[0]
+            direction = alert["direction"]
+            level = alert["level"]
+            
+            if should_alert(code, level, direction, state):
+                message = format_alert_message(stock, cost, alert)
+                alerts_triggered.append({
+                    "stock": name,
+                    "code": code,
+                    "message": message,
+                })
                 
                 # 更新状态
-                if 'alerts' not in state:
-                    state['alerts'] = {}
-                state['alerts'][stock['code']] = {
-                    'last_pct': alert['level'],
-                    'last_time': datetime.now().isoformat()
+                key = f"{code}_{direction}_{level}"
+                state[key] = {
+                    "date": today,
+                    "time": current_time,
+                    "price": stock["price"],
                 }
-        else:
-            print("  无预警触发")
     
     # 保存状态
     save_state(state)
     
-    print(f"\n=== 检查完成，触发 {len(alerts_triggered)} 个预警 ===")
+    # 输出结果
+    if alerts_triggered:
+        print(f"\n触发 {len(alerts_triggered)} 个预警:")
+        for alert in alerts_triggered:
+            print(f"\n{alert['message']}")
+            print("FEISHU_ALERT:" + alert['message'])
+    else:
+        print("\n无预警触发")
+    
+    # 输出 JSON 结果供调用方解析
+    result = {
+        "timestamp": now.isoformat(),
+        "alerts": alerts_triggered,
+    }
+    print(f"\nRESULT_JSON:{json.dumps(result, ensure_ascii=False)}")
+
 
 if __name__ == "__main__":
     main()

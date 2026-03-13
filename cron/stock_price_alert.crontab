@@ -1,0 +1,13 @@
+# 股票价格预警 - 每 15 分钟检查一次（仅交易时间）
+# A 股交易时间：9:30-11:30, 13:00-15:00
+# 工作日：周一到周五 (1-5)
+
+# 上午交易时间 (9:30-11:30) - 每 15 分钟
+*/15 9 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 scripts/stock_price_alert.py >> logs/stock_alert.log 2>&1
+*/15 10 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 scripts/stock_price_alert.py >> logs/stock_alert.log 2>&1
+0,15,30 11 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 scripts/stock_price_alert.py >> logs/stock_alert.log 2>&1
+
+# 下午交易时间 (13:00-15:00) - 每 15 分钟
+*/15 13 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 scripts/stock_price_alert.py >> logs/stock_alert.log 2>&1
+*/15 14 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 scripts/stock_price_alert.py >> logs/stock_alert.log 2>&1
+0 15 * * 1-5 cd /home/yctan/.openclaw/workspace-lead && /usr/bin/python3 scripts/stock_price_alert.py >> logs/stock_alert.log 2>&1

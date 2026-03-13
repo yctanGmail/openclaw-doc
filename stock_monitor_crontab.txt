@@ -1,0 +1,22 @@
+# 股票价格预警监控 - 每 15 分钟检查一次（交易时段）
+# 上午 9:30-11:30
+30 9 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+45 9 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+0 10 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+15 10 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+30 10 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+45 10 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+0 11 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+15 11 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+30 11 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+
+# 下午 13:00-15:00
+0 13 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+15 13 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+30 13 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+45 13 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+0 14 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+15 14 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+30 14 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+45 14 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
+0 15 * * 1-5 /home/yctan/.openclaw/workspace-lead/run_stock_monitor.sh
